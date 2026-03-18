@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Liver Disease Prediction</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Heatmap/Confusion Matrix Visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <i class="fa-solid fa-notes-medical"></i>
+            <span>HepatoScan AI</span>
+        </div>
+        <div class="user-profile">
+            <span>Dr. Colleague</span>
+            <img src="https://ui-avatars.com/api/?name=Dr+Colleague&background=0D47A1&color=fff" alt="User" class="avatar">
+        </div>
+    </nav>
+
+    <main class="dashboard-container">
+        <header class="dashboard-header">
+            <h1>Liver Disease Prediction System</h1>
+            <p>Upload a patient's MRI or CT scan to perform advanced predictive analysis using state-of-the-art models.</p>
+        </header>
+
+        <section class="upload-section">
+            <div class="drop-zone" id="dropZone">
+                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                <h3 class="drop-zone-text">Drag & Drop Scan Image Here</h3>
+                <p>or click to browse from your device</p>
+                <input type="file" name="file" id="fileInput" accept=".jpg, .jpeg, .png, .dcm" hidden>
+            </div>
+            
+            <div class="preview-area" id="previewArea" style="display: none;">
+                <img id="imagePreview" src="" alt="Scan Preview">
+                <button class="icon-btn remove-btn" id="removeFileBtn" title="Remove image">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="action-btn" id="btnResnet" disabled>
+                    <i class="fa-solid fa-microscope"></i>
+                    <span>ResNet-50</span>
+                </button>
+                <button class="action-btn" id="btnVit" disabled>
+                    <i class="fa-solid fa-brain"></i>
+                    <span>ViT SOTA</span>
+                </button>
+                <button class="action-btn" id="btnYolo" disabled>
+                    <i class="fa-solid fa-crosshairs"></i>
+                    <span>YOLOv8</span>
+                </button>
+                <button class="action-btn hybrid-btn" id="btnHybrid" disabled title="Combined state-of-the-art analysis for fastest and most accurate results">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>Hybrid Analysis</span>
+                </button>
+            </div>
+            <div id="loadingIndicator" class="loading-indicator" style="display: none;">
+                <div class="spinner"></div>
+                <span id="loadingText">Processing scan...</span>
+            </div>
+        </section>
+
+        <section class="results-section" id="resultsSection" style="display: none;">
+            <div class="results-grid">
+                <!-- Left: Processed Image -->
+                <div class="result-card image-card">
+                    <h3>Processed Scan</h3>
+                    <div class="processed-image-container">
+                        <img id="processedImage" src="" alt="Processed result">
+                    </div>
+                    <div class="scan-details">
+                        <span class="detail-badge" id="scanModelType">Model: ResNet-50</span>
+                    </div>
+                </div>
+
+                <!-- Right: Stats & Prediction -->
+                <div class="result-card stats-card">
+                    <h3>Diagnostic Output</h3>
+                    
+                    <div class="prediction-highlight" id="predictionHighlight">
+                        <span class="label">Prediction</span>
+                        <h2 id="predictionLabel">Fatty Liver</h2>
+                        <p class="recommendation" id="clinicalNote">Requires further clinical correlation.</p>
+                    </div>
+
+                    <div class="gauge-container">
+                        <div class="gauge-header">
+                            <span>Confidence Score</span>
+                            <span class="gauge-value" id="confidenceValue">87%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill" id="confidenceFill" style="width: 87%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="secondary-metrics">
+                        <div class="metric">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <div class="metric-info">
+                                <span class="metric-label">System Accuracy</span>
+                                <span class="metric-val" id="accuracyValue">--%</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <i class="fa-solid fa-stopwatch"></i>
+                            <div class="metric-info">
+                                <span class="metric-label">Inference Time</span>
+                                <span class="metric-val" id="inferenceTime">-- ms</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- System Analytics: Detailed Metrics -->
+        <section class="analytics-section" id="analyticsSection" style="display: none; padding-top: 2rem;">
+            <div class="result-card">
+                <h3><i class="fa-solid fa-chart-pie"></i> Evaluation Metrics & Confusion Matrix</h3>
+                <div class="analytics-grid">
+
+                    <!-- Confusion Matrix Bar Graph -->
+                    <div class="chart-container" style="position: relative; height:300px; width:100%;">
+                        <canvas id="cmCanvas"></canvas>
+                    </div>
+
+                    <!-- Extended Metrics -->
+                    <div class="extended-metrics">
+                        <div class="metrics-group">
+                            <div class="metric-header">
+                                <span>Precision</span>
+                                <span id="precisionPerc">--%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar fill-precision" id="precisionBar"></div>
+                            </div>
+                        </div>
+
+                        <div class="metrics-group">
+                            <div class="metric-header">
+                                <span>Recall</span>
+                                <span id="recallPerc">--%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar fill-recall" id="recallBar"></div>
+                            </div>
+                        </div>
+
+                        <div class="metrics-group">
+                            <div class="metric-header">
+                                <span>F1-Score</span>
+                                <span id="f1Perc">--%</span>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar fill-f1" id="f1Bar"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>

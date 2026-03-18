@@ -1,0 +1,12 @@
+tensorflow==2.15.0
+tf-keras
+flask==3.0.0
+flask-cors
+numpy
+pydicom
+Pillow
+scikit-learn
+gunicorn
+ultralytics
+opencv-python
+requests
